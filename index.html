@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Economijá</title>
+
+  <!-- Instalação no celular (Adicionar à Tela de Início) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Economijá">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#2f6f4f">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Economijá</h1>
+    <div class="nav-mes">
+      <button id="mes-ant" aria-label="Mês anterior">◀</button>
+      <span id="mes-atual"></span>
+      <button id="mes-prox" aria-label="Próximo mês">▶</button>
+    </div>
+  </header>
+
+  <nav class="abas">
+    <button data-aba="mes" class="ativa">Mês</button>
+    <button data-aba="relatorio">Relatório</button>
+    <button data-aba="lancamentos">Lançamentos</button>
+  </nav>
+
+  <main>
+    <!-- Visão do mês -->
+    <section id="aba-mes" class="aba">
+      <div class="cards">
+        <div class="card"><span>Receitas</span><strong id="c-receitas" class="pos"></strong></div>
+        <div class="card"><span>Despesas</span><strong id="c-despesas" class="neg"></strong></div>
+        <div class="card"><span>Saldo</span><strong id="c-saldo"></strong></div>
+        <div class="card"><span>Falta pagar</span><strong id="c-pendente"></strong></div>
+      </div>
+      <div class="barra-acoes">
+        <button class="primario" id="btn-novo">+ Novo lançamento</button>
+      </div>
+      <h2>Receitas</h2>
+      <ul id="lista-receitas" class="lista"></ul>
+      <h2>Despesas</h2>
+      <ul id="lista-despesas" class="lista"></ul>
+    </section>
+
+    <!-- Relatório -->
+    <section id="aba-relatorio" class="aba" hidden>
+      <div class="barra-acoes">
+        <label>Projetar
+          <select id="horizonte">
+            <option value="3">3 meses</option>
+            <option value="6" selected>6 meses</option>
+            <option value="12">12 meses</option>
+            <option value="24">24 meses</option>
+          </select>
+        </label>
+        <button id="btn-imprimir">Imprimir / PDF</button>
+      </div>
+
+      <h2>Resumo mês a mês</h2>
+      <div class="tabela-wrap">
+        <table id="tabela-projecao">
+          <thead>
+            <tr>
+              <th>Mês</th><th>Receitas</th><th>Fixas</th><th>Parceladas</th>
+              <th>Avulsas</th><th>Total despesas</th><th>Saldo</th><th>Acumulado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h2>Gastos fixos e parcelados ativos</h2>
+      <div class="tabela-wrap">
+        <table id="tabela-fixos">
+          <thead>
+            <tr><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor/mês</th><th>Situação</th><th>Termina em</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h2>Detalhe por mês</h2>
+      <div id="detalhe-meses"></div>
+    </section>
+
+    <!-- Todos os lançamentos -->
+    <section id="aba-lancamentos" class="aba" hidden>
+      <div class="barra-acoes">
+        <button class="primario" id="btn-novo-2">+ Novo lançamento</button>
+        <button id="btn-exportar">Exportar backup</button>
+        <label class="botao">Importar backup<input type="file" id="input-importar" accept="application/json" hidden></label>
+      </div>
+      <div class="tabela-wrap">
+        <table id="tabela-todos">
+          <thead>
+            <tr><th>Descrição</th><th>Tipo</th><th>Recorrência</th><th>Valor</th><th>Início</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Formulário -->
+  <dialog id="dlg">
+    <form id="form" method="dialog">
+      <h2 id="form-titulo">Novo lançamento</h2>
+
+      <div class="segmentado">
+        <label><input type="radio" name="tipo" value="despesa" checked><span>Despesa</span></label>
+        <label><input type="radio" name="tipo" value="receita"><span>Receita</span></label>
+      </div>
+
+      <label>Descrição<input name="descricao" required placeholder="Ex: Salário, Aluguel, Celular"></label>
+      <label>Categoria<input name="categoria" list="categorias" placeholder="Ex: Moradia"></label>
+      <datalist id="categorias"></datalist>
+
+      <label>Recorrência
+        <select name="recorrencia">
+          <option value="unica">Única (só neste mês)</option>
+          <option value="fixa">Fixa mensal (todo mês)</option>
+          <option value="parcelada">Parcelada</option>
+        </select>
+      </label>
+
+      <div class="linha">
+        <label>Valor (€)<input name="valor" type="number" step="0.01" min="0.01" required></label>
+        <label id="campo-mes">Mês<input name="mes" type="month" required></label>
+      </div>
+
+      <div id="campos-fixa" hidden>
+        <label>Termina em (opcional)<input name="fim" type="month"></label>
+      </div>
+
+      <div id="campos-parcelada" hidden>
+        <div class="linha">
+          <label>Nº de parcelas<input name="parcelas" type="number" min="2" step="1" value="2"></label>
+          <label>Parcela atual neste mês<input name="parcelaAtual" type="number" min="1" step="1" value="1"></label>
+        </div>
+        <div class="segmentado pequeno">
+          <label><input type="radio" name="valorRef" value="parcela" checked><span>Valor é da parcela</span></label>
+          <label><input type="radio" name="valorRef" value="total"><span>Valor é o total</span></label>
+        </div>
+        <p class="dica" id="dica-parcela"></p>
+      </div>
+
+      <div class="acoes-form">
+        <button type="button" id="btn-cancelar">Cancelar</button>
+        <button type="submit" class="primario">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
