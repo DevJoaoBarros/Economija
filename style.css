@@ -120,7 +120,7 @@ input, select, textarea { font-size: 16px !important; }
 html, button, label, a, summary { touch-action: manipulation; }
 
 @media print {
-  .abas, .barra-acoes, .nav-mes button { display: none !important; }
+  .abas, .barra-acoes, .nav-mes button, #btn-config {display: none !important; }
   body { background: #fff; color: #000; }
   .aba[hidden] { display: none !important; }
   details { break-inside: avoid; }

@@ -65,10 +65,10 @@ const MOEDA_POR_PAIS = {
 
 // Descobre a moeda pela região configurada no celular (sem GPS, sem internet)
 function moedaDoAparelho () {
-  const idiomas = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'pt-Pt'];
+  const idiomas = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'pt-PT'];
   for (const idioma of idiomas) {
     let regiao = null;
-    try { regiao = new Intl.Locale(idoma).maximize().region; } catch (e) { /* idioma inválido */}
+    try { regiao = new Intl.Locale(idioma).maximize().region; } catch (e) { /* idioma inválido */}
     if (regiao && MOEDA_POR_PAIS[regiao]) return MOEDA_POR_PAIS[regiao];
   }
   return 'EUR';
@@ -90,8 +90,8 @@ function aplicarMoeda() {
     estado.config.moeda = 'EUR';
     formatador = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
   }
-  const simbolo = formatador.formatRangeToParts(0).find(p => p.type === 'currency')?.value || moeda;
-  const el = document.getElementsById('simbolo-moeda');
+  const simbolo = formatador.formatToParts(0).find(p => p.type === 'currency')?.value || moeda;
+  const el = document.getElementById('simbolo-moeda');
   if (el) el.textContent = simbolo;
 }
 aplicarMoeda();
@@ -107,7 +107,7 @@ function listaMoedas() {
   try { nomes = new Intl.DisplayNames(['pt-BR'], { type: 'currency' }); } catch (e) { /* sem nomes */}
   return codigos
     .map(c => ({ codigo: c, nome: nomes ? nomes.of(c) : c }))
-    .sort((a, b) => a.nome.localCompare(b.nome, 'pt-BR'));
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
 function esc(s) {
@@ -443,7 +443,7 @@ $('#btn-config').addEventListener('click', () => {
   dlgConfig.showModal();
 });
 
-$('#form-cofig-cancelar').addEventListener('click', () => dlgConfig.close());
+$('#btn-cofig-cancelar').addEventListener('click', () => dlgConfig.close());
 
 $('#form-config').addEventListener('submit', e => {
   e.preventDefault();
