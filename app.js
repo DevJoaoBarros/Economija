@@ -109,7 +109,7 @@ function listaMoedas() {
     .map(c => ({ codigo: c, nome: nomes ? nomes.of(c) : c }))
     // Remove moedas antigas (nome com ano, ex: "(1964-2022)"),
     // moedas sem nome traduzido (ex: "XSU") e unidades que não são dinheiro do dia a dia
-    .filter(m => !/\d{4}/.test.apply(m.nome) && m.nome !== m.codigo && !['XDR', 'XSU', 'XUA', 'XAU', 'XAG', 'XPT', 'XPD'].includes(m.codigo))
+    .filter(m => !/\d{4}/.test.(m.nome) && m.nome !== m.codigo && !['XDR', 'XSU', 'XUA', 'XAU', 'XAG', 'XPT', 'XPD'].includes(m.codigo))
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
