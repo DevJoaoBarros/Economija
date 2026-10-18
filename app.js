@@ -107,6 +107,9 @@ function listaMoedas() {
   try { nomes = new Intl.DisplayNames(['pt-BR'], { type: 'currency' }); } catch (e) { /* sem nomes */}
   return codigos
     .map(c => ({ codigo: c, nome: nomes ? nomes.of(c) : c }))
+    // Remove moedas antigas (nome com ano, ex: "(1964-2022)"),
+    // moedas sem nome traduzido (ex: "XSU") e unidades que não são dinheiro do dia a dia
+    .filter(m => !/\d{4}/.test.apply(m.nome) && m.nome !== m.codigo && !['XDR', 'XSU', 'XUA', 'XAU', 'XAG', 'XPT', 'XPD'].includes(m.codigo))
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
@@ -443,7 +446,7 @@ $('#btn-config').addEventListener('click', () => {
   dlgConfig.showModal();
 });
 
-$('#btn-cofig-cancelar').addEventListener('click', () => dlgConfig.close());
+$('#btn-config-cancelar').addEventListener('click', () => dlgConfig.close());
 
 $('#form-config').addEventListener('submit', e => {
   e.preventDefault();
