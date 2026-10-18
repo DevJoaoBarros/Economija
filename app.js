@@ -8,10 +8,10 @@ function carregar() {
     const bruto = localStorage.getItem(CHAVE);
     if (bruto) {
       const d = JSON.parse(bruto);
-      return { lancamentos: d.lancamentos || [], pagos: d.pagos || {} };
+      return { lancamentos: d.lancamentos || [], pagos: d.pagos || {}, config: d.config || {} };
     }
   } catch (e) { /* armazenamento indisponível: começa vazio */ }
-  return { lancamentos: [], pagos: {} };
+  return { lancamentos: [], pagos: {}, config: {} };
 }
 
 function salvar() {
@@ -41,8 +41,74 @@ function nomeMes(ym, curto = false) {
   return new Date(a, m - 1, 1).toLocaleDateString('pt-BR', { month: curto ? 'short' : 'long', year: 'numeric' });
 }
 
-const eur = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
-const dinheiro = v => eur.format(v);
+// ---------- Moeda ----------
+// Moeda padrão de cada país (usada só no primeiro uso, pela região do celular)
+const MOEDA_POR_PAIS = {
+  // Zona do euro
+  PT: 'EUR', ES: 'EUR', FR: 'EUR', DE: 'EUR', IT: 'EUR', NL: 'EUR', BE: 'EUR', LU: 'EUR',
+  IE: 'EUR', AT: 'EUR', FI: 'EUR', GR: 'EUR', EE: 'EUR', LV: 'EUR', LT: 'EUR', SK: 'EUR',
+  SI: 'EUR', MT: 'EUR', CY: 'EUR', HR: 'EUR', BG: 'EUR', AD: 'EUR', MC: 'EUR', SM: 'EUR',
+  VA: 'EUR', ME: 'EUR', XK: 'EUR',
+  // Língua portuguesa
+  BR: 'BRL', AO: 'AOA', MZ: 'MZN', CV: 'CVE', GW: 'XOF', ST: 'STN', TL: 'USD', MO: 'MOP',
+  // Américas
+  US: 'USD', CA: 'CAD', MX: 'MXN', AR: 'ARS', CL: 'CLP', CO: 'COP', PE: 'PEN', UY: 'UYU',
+  PY: 'PYG', BO: 'BOB', VE: 'VES', EC: 'USD', SV: 'USD', PR: 'USD',
+  // Resto da Europa
+  GB: 'GBP', CH: 'CHF', LI: 'CHF', SE: 'SEK', NO: 'NOK', DK: 'DKK', IS: 'ISK', PL: 'PLN',
+  CZ: 'CZK', HU: 'HUF', RO: 'RON', RS: 'RSD', UA: 'UAH', RU: 'RUB', TR: 'TRY',
+  // Ásia, Oceania e África
+  JP: 'JPY', CN: 'CNY', HK: 'HKD', TW: 'TWD', KR: 'KRW', IN: 'INR', SG: 'SGD', MY: 'MYR',
+  TH: 'THB', ID: 'IDR', PH: 'PHP', VN: 'VND', PK: 'PKR', BD: 'BDT', AE: 'AED', SA: 'SAR',
+  QA: 'QAR', IL: 'ILS', AU: 'AUD', NZ: 'NZD', ZA: 'ZAR', NG: 'NGN', EG: 'EGP', MA: 'MAD',
+};
+
+// Descobre a moeda pela região configurada no celular (sem GPS, sem internet)
+function moedaDoAparelho () {
+  const idiomas = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'pt-Pt'];
+  for (const idioma of idiomas) {
+    let regiao = null;
+    try { regiao = new Intl.Locale(idoma).maximize().region; } catch (e) { /* idioma inválido */}
+    if (regiao && MOEDA_POR_PAIS[regiao]) return MOEDA_POR_PAIS[regiao];
+  }
+  return 'EUR';
+}
+
+// Primeiro uso: escolhe automáticamente e salva
+if (!estado.config.moeda) {
+  estado.config.moeda = moedaDoAparelho();
+  salvar();
+}
+
+let formatador;
+function aplicarMoeda() {
+  const moeda = estado.config.moeda;
+  const local = moeda === 'BRL' ? 'pt-BR' : 'pt-PT';
+  try {
+    formatador = new Intl.NumberFormat(local, { style: 'currency', currency: moeda });
+  } catch (e) {
+    estado.config.moeda = 'EUR';
+    formatador = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+  }
+  const simbolo = formatador.formatRangeToParts(0).find(p => p.type === 'currency')?.value || moeda;
+  const el = document.getElementsById('simbolo-moeda');
+  if (el) el.textContent = simbolo;
+}
+aplicarMoeda();
+
+const dinheiro = v => formatador.format(v);
+
+// Lista de todas as moedas do mundo, com nome em português
+function listaMoedas() {
+  let codigos = [];
+  try { codigos = Intl.supportedValuesOf('currency'); } catch (e) { /* navegador antigo */ }
+  if (!codigos.length) codigos = Object.values(MOEDA_POR_PAIS).filter((c, i, a) => a.indexOf(c) === i);
+  let nomes = null;
+  try { nomes = new Intl.DisplayNames(['pt-BR'], { type: 'currency' }); } catch (e) { /* sem nomes */}
+  return codigos
+    .map(c => ({ codigo: c, nome: nomes ? nomes.of(c) : c }))
+    .sort((a, b) => a.nome.localCompare(b.nome, 'pt-BR'));
+}
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -360,6 +426,34 @@ document.addEventListener('change', e => {
   render();
 });
 
+// Configurações (moeda)
+const dlgConfig = $('#dlg-config');
+const selMoeda = $('#sel-moeda');
+
+$('#btn-config').addEventListener('click', () => {
+  if (!selMoeda.options.length) {
+    const todas= listaMoedas();
+    const principais = ['EUR', 'BRL',  'USD', 'GBP'];
+    const opcao = m => `<option value="${m.codigo}">${esc(m.nome)} (${m.codigo})</option>`;
+    selMoeda.innerHTML = 
+      `<optgroup label="Mais usadas">${todas.filter(m => principais.includes(m.codigo)).map(opcao).join('')}</optgroup>` +
+      `<optgroup label="Todas as moedas">${todas.map(opcao).join('')}</optgroup>`;
+  }
+  selMoeda.value = estado.config.moeda;
+  dlgConfig.showModal();
+});
+
+$('#form-cofig-cancelar').addEventListener('click', () => dlgConfig.close());
+
+$('#form-config').addEventListener('submit', e => {
+  e.preventDefault();
+  estado.config.moeda = selMoeda.value;
+  aplicarMoeda();
+  salvar();
+  dlgConfig.close();
+  render();
+});
+
 // Backup
 $('#btn-exportar').addEventListener('click', async () => {
   const nome = `economija-backup-${new Date().toISOString().slice(0, 10)}.json`;
@@ -389,6 +483,7 @@ $('#input-importar').addEventListener('change', async e => {
     if (!confirm('Substituir todos os dados atuais pelo backup?')) return;
     estado.lancamentos = d.lancamentos;
     estado.pagos = d.pagos || {};
+    if (d.config) { estado.config = d.config; aplicarMoeda(); }
     salvar();
     render();
   } catch (err) {

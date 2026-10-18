@@ -19,10 +19,13 @@
 <body>
   <header class="topo">
     <h1>Economijá</h1>
-    <div class="nav-mes">
-      <button id="mes-ant" aria-label="Mês anterior">◀</button>
-      <span id="mes-atual"></span>
-      <button id="mes-prox" aria-label="Próximo mês">▶</button>
+    <div class="topo-direita">
+      <div class="nav-mes">
+        <button id="mes-ant" aria-label="Mês anterior">◀</button>
+        <span id="mes-atual"></span>
+        <button id="mes-prox" aria label="Próximo mês">▶<</button>
+      </div>
+      <button id="btn-config" aria-label="Confirgurações" title="Configurações">⚙️</button>
     </div>
   </header>
 
@@ -134,7 +137,7 @@
       </label>
 
       <div class="linha">
-        <label>Valor (€)<input name="valor" type="number" step="0.01" min="0.01" required></label>
+        <label>Valor (<span id="simbolo-moeda"></span>)<input name="valor" type="number" step="0.01" min="0.01" required></label>
         <label id="campo-mes">Mês<input name="mes" type="month" required></label>
       </div>
 
@@ -160,6 +163,21 @@
       </div>
     </form>
   </dialog>
+
+  <!-- Configurações -->
+   <dialog id="dlg-config">
+    <form id="form-config" method="dialog">
+      <h2>Comfigurações</h2>
+      <label>Moeda
+        <select id="sel-moeda"></select>
+      </label>
+      <p class="dica">Trocar a moeda muda só o símbolo. Os valores já lançados não são convertidos.</p>
+      <div class="acoes-form">
+        <button type="button" id="btn-config-cancelar">Cancelar</button>
+        <button type="submit" class="primario">Salvar</button>
+      </div>
+    </form>
+   </dialog>
 
   <script src="app.js"></script>
 </body>

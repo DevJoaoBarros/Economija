@@ -132,3 +132,6 @@ html, button, label, a, summary { touch-action: manipulation; }
   color: var(--muted);
   padding: 24px 16px 32px;
 }
+
+.topo-direita { display: flex; align-items: center; gap: 8px; }
+#btn-config { padding: 8px 10px; }
