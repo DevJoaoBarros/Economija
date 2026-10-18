@@ -113,6 +113,12 @@ form input:not([type=radio]), form select {
   .linha { grid-template-columns: 1fr; gap: 0; }
 }
 
+/* ---------- Celular: evitar zoom automático ---------- */
+/* O iPhone dá zoom ao tocar em campos com letra menor que 16px */
+input, select, textarea { font-size: 16px !important; }
+/* Evita o zoom de "toque duplo" em botões e na página (o zoom com pinça continua funcionando) */
+html, button, label, a, summary { touch-action: manipulation; }
+
 @media print {
   .abas, .barra-acoes, .nav-mes button { display: none !important; }
   body { background: #fff; color: #000; }
