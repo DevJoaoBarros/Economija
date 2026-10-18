@@ -125,3 +125,10 @@ html, button, label, a, summary { touch-action: manipulation; }
   .aba[hidden] { display: none !important; }
   details { break-inside: avoid; }
 }
+
+.rodape {
+  text-align: center;
+  font-size: .75rem;
+  color: var(--muted);
+  padding: 24px 16px 32px;
+}
